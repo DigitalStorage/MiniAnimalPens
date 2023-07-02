@@ -1,6 +1,7 @@
 package me.mangorage.minianimalpens.common.core.registry;
 
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -15,9 +16,11 @@ public class Registry {
     public static final RegistryObject<CreativeModeTab> MAIN_TAB = TABS.register(
             "main",
             () -> CreativeModeTab.builder()
+                    .title(Component.literal("Mini Animal Farms"))
                     .icon(() -> MAPBlocks.PEN_BLOCK_ITEM.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(MAPBlocks.PEN_BLOCK_ITEM.get());
+                        output.accept(MAPItems.CAPSULE_ITEM.get());
                     })
                     .build()
     );
