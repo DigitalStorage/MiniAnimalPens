@@ -14,7 +14,7 @@ public class MAPBlocks {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
     public static final DeferredRegister<Item> ITEMS = MAPItems.ITEMS;
 
-    public static final BlockWithItem<Block, CustomBlockItem> BWI_TEST = new BlockWithItem<>(
+    public static final BlockWithItem<Block, CustomBlockItem> BWI_TEST = BlockWithItem.create(
             BLOCKS.register(
                     "test",
                     () -> new Block(
@@ -31,4 +31,6 @@ public class MAPBlocks {
                 );
             }
     );
+
+
 }
