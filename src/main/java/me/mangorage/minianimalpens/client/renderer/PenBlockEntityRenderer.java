@@ -16,6 +16,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import org.joml.Math;
 import org.joml.Quaternionf;
 
 public class PenBlockEntityRenderer implements BlockEntityRenderer<PenBlockEntity> {
@@ -49,21 +50,19 @@ public class PenBlockEntityRenderer implements BlockEntityRenderer<PenBlockEntit
     private <T extends Entity> void renderEntity(T entity, Direction facing, Type type, int EntityYaw, float partialTicks, PoseStack stack, MultiBufferSource source, int packed) {
         stack.pushPose();
 
-        stack.translate(-0.5f, -0.5f, -0.5f);
         stack.rotateAround(
-                facing.getRotation().rotateLocalZ(1.5f),
-                1f,
-                0,
-                1f
+                facing.getRotation().rotateX((float)-Math.PI/2f),
+                0.5f,
+                0.5f,
+                0.5f
         );
-        stack.translate(0.5f,0.5f,0.5f);
         stack.pushPose();
 
         switch (type) {
             case FIRST -> {
                 stack.scale(0.3f, 0.3f, 0.3f);
 
-                stack.mulPose(facing.getRotation());
+                //stack.mulPose(facing.getRotation());
                 stack.translate(1.6, 0.0, 1.6);
                 ERD.getRenderer(entity).render(entity, EntityYaw, partialTicks, stack, source, packed);
             }
