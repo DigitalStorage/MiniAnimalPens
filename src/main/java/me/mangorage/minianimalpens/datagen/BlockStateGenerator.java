@@ -3,6 +3,7 @@ package me.mangorage.minianimalpens.datagen;
 import me.mangorage.minianimalpens.MiniAnimalPensCore;
 import me.mangorage.minianimalpens.common.core.Constants;
 import me.mangorage.minianimalpens.common.core.registry.MAPBlocks;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,7 +29,7 @@ public class BlockStateGenerator extends BlockStateProvider {
         ModelFile controllerModel = models()
             .withExistingParent("block/animal_pen_block",
                 MAPBlocks.PEN_BLOCK.getId().withPrefix("block/"))
-            .renderType(new ResourceLocation("cutout"));
+            .renderType(RenderType.cutoutMipped().toString());
 
         horizontalBlock(MAPBlocks.PEN_BLOCK.get(), controllerModel);
         simpleBlockItem(MAPBlocks.PEN_BLOCK.get(), controllerModel);
