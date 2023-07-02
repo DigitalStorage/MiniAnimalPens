@@ -1,11 +1,11 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "block/glass",
-		"1": "block/dirt",
-		"2": "block/oak_plank",
-		"3": "grass",
-		"particle": "block/glass"
+		"0": "glass",
+		"1": "dirt",
+		"2": "oak_plank",
+		"3": "block/grass",
+		"particle": "glass"
 	},
 	"elements": [
 		{
