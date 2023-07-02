@@ -4,6 +4,7 @@ import me.mangorage.minianimalpens.common.blocks.PenBlock;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -18,7 +19,7 @@ public class MAPBlocks {
     public static final RegistryObject<PenBlock> PEN_BLOCK = BLOCKS.register(
             "animal_pen",
             () -> new PenBlock(
-                    BlockBehaviour.Properties.of()
+                    BlockBehaviour.Properties.of().noOcclusion().isViewBlocking((a, b, c)->false)
             )
     );
 
@@ -26,7 +27,7 @@ public class MAPBlocks {
             "animal_pen",
             () -> new BlockItem(
                     PEN_BLOCK.get(),
-                    new Item.Properties().stacksTo(65)
+                    new Item.Properties()
             )
     );
 }

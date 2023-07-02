@@ -164,6 +164,14 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+}
+
+processTestResources {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+}
+
 // Example for how to get properties into the manifest for reading at runtime.
 jar {
     manifest {

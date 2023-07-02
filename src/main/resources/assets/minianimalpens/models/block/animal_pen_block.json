@@ -1,0 +1,4 @@
+{
+  "parent": "minianimalpens:block/animal_pen",
+  "render_type": "minecraft:cutout"
+}
