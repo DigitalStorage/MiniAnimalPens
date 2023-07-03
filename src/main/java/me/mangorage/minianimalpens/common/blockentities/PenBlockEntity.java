@@ -1,9 +1,9 @@
 package me.mangorage.minianimalpens.common.blockentities;
 
+import me.mangorage.minianimalpens.common.blockentities.penextensions.SimulatedAnimals;
 import me.mangorage.minianimalpens.common.core.registry.MAPBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -11,6 +11,7 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -21,8 +22,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 
 public class PenBlockEntity extends BlockEntity {
+    private SimulatedAnimals SIMULATED_ANIMALS;
     private ResourceLocation ENTITY_ID = null;
-    private int entityCount = 0;
+
 
     @OnlyIn(Dist.CLIENT)
     private Entity entityA;
@@ -30,9 +32,19 @@ public class PenBlockEntity extends BlockEntity {
     @OnlyIn(Dist.CLIENT)
     private Entity entityB;
 
+    // Used on Server for loading, Client for Renderer
+    private int entityCount;
 
-    public PenBlockEntity(BlockPos p_155229_, BlockState p_155230_) {
-        super(MAPBlockEntities.PEN_BLOCK_ENTITY.get(), p_155229_, p_155230_);
+
+    public PenBlockEntity(BlockPos pos, BlockState state) {
+        super(MAPBlockEntities.PEN_BLOCK_ENTITY.get(), pos, state);
+    }
+
+    public Animal createAnimal(ResourceLocation location) {
+        if (ForgeRegistries.ENTITY_TYPES.getValue(location).create(getLevel()) instanceof Animal animal) {
+            return animal;
+        }
+        return null;
     }
 
     public boolean addEntity(ResourceLocation ID, boolean simulate) {
@@ -44,21 +56,33 @@ public class PenBlockEntity extends BlockEntity {
         if (simulate)
             return true;
 
-        if (ENTITY_ID == null)
+        if (ENTITY_ID == null) {
             ENTITY_ID = ID;
+            Animal animal = createAnimal(ENTITY_ID);
+            if (animal != null) {
+                SIMULATED_ANIMALS = new SimulatedAnimals();
+                SIMULATED_ANIMALS.add(animal);
+            }
+        } else if (SIMULATED_ANIMALS != null) {
+            SIMULATED_ANIMALS.add(createAnimal(ENTITY_ID));
+        }
 
-        entityCount++;
         updateClient();
 
         return true;
     }
 
     public boolean breed(ItemStack stack) {
-        return false;
+        if (SIMULATED_ANIMALS == null)
+            return false;
+        boolean update = SIMULATED_ANIMALS.breed(this, stack);
+        if (update)
+            updateClient();
+        return update;
     }
 
     public int getEntityCount() {
-        return entityCount;
+        return SIMULATED_ANIMALS != null ? SIMULATED_ANIMALS.getCount() : getLevel().isClientSide ? entityCount : 0;
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -82,7 +106,8 @@ public class PenBlockEntity extends BlockEntity {
         CompoundTag tag = new CompoundTag();
         if (ENTITY_ID != null) {
             tag.putString("EntityID", ENTITY_ID.toString());
-            tag.putInt("EntityCount", entityCount);
+            if (SIMULATED_ANIMALS != null)
+                tag.putInt("EntityCount", SIMULATED_ANIMALS.getCount());
         }
         return tag;
     }
@@ -94,10 +119,13 @@ public class PenBlockEntity extends BlockEntity {
             if (entityType != null) {
                 if (tag.contains("EntityCount"))
                     entityCount = tag.getInt("EntityCount");
-                entityA = entityType.create(getLevel());
 
-                if (entityCount > 1)
+                entityA = entityType.create(getLevel());
+                entityA.tick();
+                if (entityCount > 1) {
                     entityB = entityType.create(getLevel());
+                    entityB.tick();
+                }
             }
         }
     }
@@ -109,6 +137,16 @@ public class PenBlockEntity extends BlockEntity {
     @Override
     public void onLoad() {
         super.onLoad();
+        if (!getLevel().isClientSide && entityCount > 0) {
+            if (ENTITY_ID != null) {
+                SIMULATED_ANIMALS = new SimulatedAnimals();
+                for (int i = 0; i < entityCount; i++)
+                    SIMULATED_ANIMALS.add(createAnimal(ENTITY_ID));
+            }
+
+            entityCount = -1;
+        }
+
         updateClient();
     }
 
@@ -122,7 +160,8 @@ public class PenBlockEntity extends BlockEntity {
         super.saveAdditional(tag);
         if (ENTITY_ID != null) {
             tag.putString("EntityID", ENTITY_ID.toString());
-            tag.putInt("EntityCount", entityCount);
+            if (SIMULATED_ANIMALS != null)
+                tag.putInt("EntityCount", SIMULATED_ANIMALS.getCount());
         }
     }
 
