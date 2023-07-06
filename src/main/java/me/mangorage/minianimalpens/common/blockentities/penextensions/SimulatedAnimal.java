@@ -5,6 +5,9 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraftforge.common.util.INBTSerializable;
 
 public class SimulatedAnimal implements INBTSerializable<CompoundTag> {
+    private static final String LOVE_NBT = "love";
+    private static final String AGE_NBT = "age";
+
     private final Animal animal;
     private int loveCooldown = 0;
     private int age = 0; // negative is baby, positive can not breed, 0 can
@@ -43,11 +46,19 @@ public class SimulatedAnimal implements INBTSerializable<CompoundTag> {
 
     @Override
     public CompoundTag serializeNBT() {
-        return new CompoundTag();
+        CompoundTag tag = new CompoundTag();
+        if (age != 0)
+            tag.putInt(AGE_NBT, age);
+        if (loveCooldown != 0)
+            tag.putInt(LOVE_NBT, loveCooldown);
+        return tag;
     }
 
     @Override
-    public void deserializeNBT(CompoundTag nbt) {
-
+    public void deserializeNBT(CompoundTag tag) {
+        if (tag.contains(LOVE_NBT))
+            this.loveCooldown = tag.getInt(LOVE_NBT);
+        if (tag.contains(AGE_NBT))
+            this.age = tag.getInt(AGE_NBT);
     }
 }
