@@ -17,7 +17,7 @@ public class CapsuleItem extends Item {
     public InteractionResult useOn(UseOnContext pContext) {
         if (!pContext.getLevel().isClientSide) {
             pContext.getLevel().getBlockEntity(pContext.getClickedPos(), MAPBlockEntities.PEN_BLOCK_ENTITY.get()).ifPresent(
-                    entity -> entity.addEntity(ForgeRegistries.ENTITY_TYPES.getKey(EntityType.PIG), false)
+                    entity -> entity.addEntity(ForgeRegistries.ENTITY_TYPES.getKey(EntityType.SHEEP), false)
             );
         }
 

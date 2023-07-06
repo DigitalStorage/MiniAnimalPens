@@ -1,6 +1,6 @@
 package me.mangorage.minianimalpens.common.blockentities;
 
-import me.mangorage.minianimalpens.common.blockentities.penextensions.SimulatedAnimals;
+import me.mangorage.minianimalpens.common.core.simulatedanimal.SimulatedAnimals;
 import me.mangorage.minianimalpens.common.core.registry.MAPBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -42,6 +42,10 @@ public class PenBlockEntity extends BlockEntity {
         super(MAPBlockEntities.PEN_BLOCK_ENTITY.get(), pos, state);
     }
 
+    public SimulatedAnimals getSimulatedAnimals() {
+        return SIMULATED_ANIMALS;
+    }
+
     public Animal createAnimal(ResourceLocation location) {
         if (ForgeRegistries.ENTITY_TYPES.getValue(location).create(getLevel()) instanceof Animal animal) {
             return animal;
@@ -72,11 +76,13 @@ public class PenBlockEntity extends BlockEntity {
     }
 
     public boolean breed(ItemStack stack) {
-        // check if we can breed first!
-        boolean update = SIMULATED_ANIMALS.breed(this, stack);
-        if (update)
-            updateAll();
-        return update;
+        if (SIMULATED_ANIMALS.canBreed()) {
+            boolean update = SIMULATED_ANIMALS.breed(this, stack);
+            if (update)
+                updateAll();
+            return update;
+        }
+        return false;
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -112,15 +118,13 @@ public class PenBlockEntity extends BlockEntity {
 
     @Override
     public void handleUpdateTag(CompoundTag tag) {
-        if (tag != null) {
-            if (tag.contains(ENTITY_ID_NBT)) {
-                ResourceLocation ID = ResourceLocation.tryParse(tag.getString(ENTITY_ID_NBT));
-                if (canCreateAnimal(ID)) {
-                    entityA = createAnimal(ID);
-                    entityB = createAnimal(ID);
-                    if (tag.contains(ENTITY_COUNT_NBT))
-                        entityCount = tag.getInt(ENTITY_COUNT_NBT);
-                }
+        if (tag.contains(ENTITY_ID_NBT)) {
+            ResourceLocation ID = ResourceLocation.tryParse(tag.getString(ENTITY_ID_NBT));
+            if (canCreateAnimal(ID)) {
+                entityA = createAnimal(ID);
+                entityB = createAnimal(ID);
+                if (tag.contains(ENTITY_COUNT_NBT))
+                    entityCount = tag.getInt(ENTITY_COUNT_NBT);
             }
         }
     }
@@ -143,7 +147,9 @@ public class PenBlockEntity extends BlockEntity {
 
     @Override
     public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
-        handleUpdateTag(pkt.getTag());
+        CompoundTag tag = pkt.getTag();
+        if (tag != null)
+            handleUpdateTag(tag);
     }
 
     @Override

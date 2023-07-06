@@ -1,19 +1,35 @@
-package me.mangorage.minianimalpens.common.blockentities.penextensions;
+package me.mangorage.minianimalpens.common.core.simulatedanimal;
 
+import me.mangorage.minianimalpens.common.core.Util;
+import me.mangorage.minianimalpens.common.core.penextensions.CooldownManager;
+import me.mangorage.minianimalpens.common.core.penextensions.ExtensionManager;
+import me.mangorage.minianimalpens.common.core.penextensions.PenExtension;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraftforge.common.util.INBTSerializable;
+
+import java.util.HashMap;
 
 public class SimulatedAnimal implements INBTSerializable<CompoundTag> {
     private static final String LOVE_NBT = "love";
     private static final String AGE_NBT = "age";
+    private static final String MANAGER_NBT = "manager";
 
     private final Animal animal;
     private int loveCooldown = 0;
     private int age = 0; // negative is baby, positive can not breed, 0 can
+    private CooldownManager MANAGER;
+
 
     public SimulatedAnimal(Animal animal) {
         this.animal = animal;
+        ResourceLocation ID = Util.getID(animal.getType());
+        if (ExtensionManager.hasExtension(ID)) {
+            MANAGER = new CooldownManager();
+            ExtensionManager.getExtension(ID).ifPresent(e -> e.registerCooldowns(MANAGER));
+            MANAGER.lock();
+        }
     }
 
     public SimulatedAnimal(Animal animal, int age) {
@@ -25,6 +41,10 @@ public class SimulatedAnimal implements INBTSerializable<CompoundTag> {
         return animal;
     }
 
+    public CooldownManager getManager() {
+        return MANAGER;
+    }
+
     public SimulatedAnimal breed(SimulatedAnimal B) {
         this.loveCooldown = 100;
         B.loveCooldown = 100;
@@ -34,6 +54,8 @@ public class SimulatedAnimal implements INBTSerializable<CompoundTag> {
     public void tick() {
         if (loveCooldown > 0)
             loveCooldown--;
+        if (MANAGER != null)
+            MANAGER.tick();
     }
 
     public boolean isBaby() {
@@ -51,6 +73,8 @@ public class SimulatedAnimal implements INBTSerializable<CompoundTag> {
             tag.putInt(AGE_NBT, age);
         if (loveCooldown != 0)
             tag.putInt(LOVE_NBT, loveCooldown);
+        if (MANAGER != null)
+            tag.put(MANAGER_NBT, MANAGER.serializeNBT());
         return tag;
     }
 
@@ -60,5 +84,7 @@ public class SimulatedAnimal implements INBTSerializable<CompoundTag> {
             this.loveCooldown = tag.getInt(LOVE_NBT);
         if (tag.contains(AGE_NBT))
             this.age = tag.getInt(AGE_NBT);
+        if (tag.contains(MANAGER_NBT))
+            MANAGER.deserializeNBT(tag.getCompound(MANAGER_NBT));
     }
 }

@@ -12,7 +12,9 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.animal.Sheep;
 import org.joml.Matrix4f;
 
 import java.awt.*;
@@ -21,6 +23,7 @@ public class PenBlockEntityRenderer implements BlockEntityRenderer<PenBlockEntit
     private final BlockRenderDispatcher BRD;
     private final EntityRenderDispatcher ERD;
     private final Font FONT;
+
 
     public PenBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
         this.BRD = context.getBlockRenderDispatcher();
@@ -34,7 +37,7 @@ public class PenBlockEntityRenderer implements BlockEntityRenderer<PenBlockEntit
         Direction facing = pBlockEntity.getBlockState().getValue(PenBlock.PROP_FACING);
 
         renderText("" + pBlockEntity.getEntityCount(), facing, pPoseStack, pBufferSource, pPackedLight);
-        renderEntity(pBlockEntity.getEntityA(), pBlockEntity.getEntityB(), facing, 0, pPartialTick, pPoseStack, pBufferSource, pPackedLight);
+        renderEntity(pBlockEntity, facing, 0, pPartialTick, pPoseStack, pBufferSource, pPackedLight);
     }
 
     private void renderText(String string, Direction direction, PoseStack stack, MultiBufferSource source, int packedLight) {
@@ -61,7 +64,7 @@ public class PenBlockEntityRenderer implements BlockEntityRenderer<PenBlockEntit
         stack.popPose();
     }
 
-    private <T extends Entity> void renderEntity(T entityA, T entityB, Direction facing, int EntityYaw, float partialTicks, PoseStack stack, MultiBufferSource source, int packed) {
+    private <T extends Entity> void renderEntity(PenBlockEntity BE, Direction facing, int EntityYaw, float partialTicks, PoseStack stack, MultiBufferSource source, int packed) {
         stack.pushPose();
         stack.rotateAround(
                 facing.getRotation().rotateX((float)-java.lang.Math.PI/2f),
@@ -70,12 +73,17 @@ public class PenBlockEntityRenderer implements BlockEntityRenderer<PenBlockEntit
                 0.5f
         );
 
-        if (entityA != null && entityB == null) {
+        if (BE.getEntityCount() == 1) {
+            Entity entityA = BE.getEntityA();
+            if (entityA instanceof Sheep sheep)
+                sheep.setSheared(true);
             stack.scale(0.3f, 0.3f, 0.3f);
             stack.translate(1.6, 0.0, 1.6);
             ERD.getRenderer(entityA).render(entityA, EntityYaw, partialTicks, stack, source, packed);
 
-        } else if (entityA != null && entityB != null) {
+        } else if (BE.getEntityCount() > 1) {
+            Entity entityA = BE.getEntityA();
+            Entity entityB = BE.getEntityB();
             stack.scale(0.3f, 0.3f, 0.3f);
             stack.translate(1.2, 0.0, 1.6);
             ERD.getRenderer(entityA).render(entityA, EntityYaw, partialTicks, stack, source, packed);
@@ -84,30 +92,4 @@ public class PenBlockEntityRenderer implements BlockEntityRenderer<PenBlockEntit
         }
         stack.popPose();
     }
-
-    /**
-    protected void renderNameTag(Component pDisplayName, PoseStack pMatrixStack, MultiBufferSource pBuffer, int pPackedLight) {
-        double d0 = ERD.distanceToSqr(pEntity);
-        if (net.minecraftforge.client.ForgeHooksClient.isNameplateInRenderDistance(pEntity, d0)) {
-            boolean flag = !pEntity.isDiscrete();
-            float f = pEntity.getNameTagOffsetY();
-            int i = "deadmau5".equals(pDisplayName.getString()) ? -10 : 0;
-            pMatrixStack.pushPose();
-            pMatrixStack.translate(0.0F, f, 0.0F);
-            pMatrixStack.mulPose(ERD.cameraOrientation());
-            pMatrixStack.scale(-0.025F, -0.025F, 0.025F);
-            Matrix4f matrix4f = pMatrixStack.last().pose();
-            float f1 = Minecraft.getInstance().options.getBackgroundOpacity(0.25F);
-            int j = (int)(f1 * 255.0F) << 24;
-            Font font = FONT;
-            float f2 = (float)(-font.width(pDisplayName) / 2);
-            font.drawInBatch(pDisplayName, f2, (float)i, 553648127, false, matrix4f, pBuffer, flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL, j, pPackedLight);
-            if (flag) {
-                font.drawInBatch(pDisplayName, f2, (float)i, -1, false, matrix4f, pBuffer, Font.DisplayMode.NORMAL, 0, pPackedLight);
-            }
-
-            pMatrixStack.popPose();
-        }
-    }
-     **/
 }

@@ -1,18 +1,15 @@
 package me.mangorage.minianimalpens.common.blocks;
 
 import me.mangorage.minianimalpens.common.blockentities.PenBlockEntity;
+import me.mangorage.minianimalpens.common.core.penextensions.ExtensionManager;
 import me.mangorage.minianimalpens.common.core.registry.MAPBlockEntities;
-import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.GrassColor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -34,6 +31,7 @@ public class PenBlock extends Block implements EntityBlock {
         this.registerDefaultState(this.stateDefinition.any().setValue(PROP_FACING, Direction.NORTH));
     }
 
+
     @Override
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
         if (!pLevel.isClientSide) {
@@ -42,6 +40,11 @@ public class PenBlock extends Block implements EntityBlock {
                 suceed.set(e.breed(pPlayer.getItemInHand(pHand)));
             });
             if (!suceed.get()) {
+                pLevel.getBlockEntity(pPos, MAPBlockEntities.PEN_BLOCK_ENTITY.get()).ifPresent(e -> {
+                    ExtensionManager.getExtension(e.getSimulatedAnimals().getID()).ifPresent(a -> {
+                        a.interact(e.getSimulatedAnimals().getAnimals(), pPlayer, pHand);
+                    });
+                });
                 return InteractionResult.PASS;
             }
         }
@@ -74,7 +77,7 @@ public class PenBlock extends Block implements EntityBlock {
     }
 
     @Nonnull
-    public RenderShape getRenderShape(@Nonnull BlockState p_49232_) {
+    public RenderShape getRenderShape(@Nonnull BlockState state) {
         return RenderShape.MODEL;
     }
 

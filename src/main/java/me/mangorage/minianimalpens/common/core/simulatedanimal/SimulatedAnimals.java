@@ -1,11 +1,10 @@
-package me.mangorage.minianimalpens.common.blockentities.penextensions;
+package me.mangorage.minianimalpens.common.core.simulatedanimal;
 
 import me.mangorage.minianimalpens.common.blockentities.PenBlockEntity;
+import me.mangorage.minianimalpens.common.core.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EntityType;
@@ -26,6 +25,11 @@ public class SimulatedAnimals implements INBTSerializable<CompoundTag> {
     private final List<SimulatedAnimal> ANIMALS = new ArrayList<>();
     private EntityType<? extends Animal> ANIMAL_TYPE = null;
     private ListTag DATA_TO_LOAD = null;
+
+
+    public List<SimulatedAnimal> getAnimals() {
+        return ANIMALS;
+    }
 
 
     public boolean breed(PenBlockEntity entity, ItemStack stack) {
@@ -55,6 +59,10 @@ public class SimulatedAnimals implements INBTSerializable<CompoundTag> {
         return BABY != null;
     }
 
+    public boolean canBreed() {
+        return !ANIMALS.isEmpty() || ANIMALS.stream().filter(SimulatedAnimal::canBreed).toList().size() > 1;
+    }
+
     public void add(Animal animal) {
         if (isValid(animal)) {
             if (getType() == null)
@@ -76,7 +84,7 @@ public class SimulatedAnimals implements INBTSerializable<CompoundTag> {
     }
 
     public ResourceLocation getID() {
-        return getType() == null ? null : ForgeRegistries.ENTITY_TYPES.getKey(getType());
+        return getType() == null ? null : Util.getID(getType());
     }
 
     public boolean isValid(Animal animal) {
@@ -116,6 +124,7 @@ public class SimulatedAnimals implements INBTSerializable<CompoundTag> {
             DATA_TO_LOAD.forEach(tag -> {
                 SimulatedAnimal animal = new SimulatedAnimal(getType().create(level));
                 animal.deserializeNBT((CompoundTag) tag);
+                ANIMALS.add(animal);
             });
         }
     }
@@ -133,9 +142,8 @@ public class SimulatedAnimals implements INBTSerializable<CompoundTag> {
             }
 
 
-            if (getType() != null && tag.contains(LIST_NBT)) {
+            if (getType() != null && tag.contains(LIST_NBT))
                 this.DATA_TO_LOAD = tag.getList(LIST_NBT, ListTag.TAG_COMPOUND);
-            }
         }
     }
 }
